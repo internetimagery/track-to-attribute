@@ -1,9 +1,17 @@
 # Make things work!
 
-# Get tracker data from nuke
+def get_tracker(file_path):
+    """ Get tracker data from nuke file """
+    pass
 
-# Get channelbox attribute
+def get_attribute():
+    """ Get selected attribute from channelbox """
+    pass
 
-# Set keys on attributes
+def set_keys(attr, startF, keys):
+    """ Set keys on attribute """
+    pass
 
-# Do everything
+def apply_data(tracker, stabalize, data, attrX, attrY):
+    """ Take data. Apply it to attributes. """
+    pass
