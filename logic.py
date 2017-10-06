@@ -19,13 +19,16 @@ def get_tracker(file_path, nuke_path="nuke"):
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     data = {}
     while True:
-        line = process.readline()
+        line = process.stdout.readline()
         if not line:
             break
         try:
             data = json.loads(line)
         except ValueError:
             pass
+    err = process.stderr.read()
+    if err:
+        raise RuntimeError(err)
     return data
 
 def get_attribute():
