@@ -14,10 +14,10 @@ def run(file_path):
     # Parse tracker data
     trackers = {}
     for node in (n["tracks"].toScript() for n in nuke.allNodes() if n.Class() == "Tracker4"):
-        for track in re.finditer(r"\"([^\"])\"\s*{\s*curve\s*x\d+\s*([\d\s\.\-xe])}\s*{\s*curve\s*x\d+\s*([\d\s\.\-xe])}", node):
+        for track in re.finditer(r"\"([^\"])\"\s*{\s*curve\s*([\d\s\.\-xe])}\s*{\s*curve\s*([\d\s\.\-xe])}", node):
             name = track.group(1)
-            X = (a for a in track.group(2).split(" ") if a[0] != "x")
-            y = (a for a in track.group(3).split(" ") if a[0] != "x")
+            X = (float(a) for a in track.group(2).split(" ") if a[0] != "x")
+            y = (float(a) for a in track.group(3).split(" ") if a[0] != "x")
             trackers[name] = (x, y)
 
     # Send tracker data back to calling process
