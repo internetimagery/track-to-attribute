@@ -35,8 +35,7 @@ class Window(object):
 
     def browse(s):
         """ Open file browser """
-        # path = cmds.fileDialog2(fm=1, ff="Nuke files (*.nk)")
-        path = cmds.fileDialog2(fm=1)
+        path = cmds.fileDialog2(fm=1, ff="Nuke files (*.nk)")
         if path:
             path = path[0]
             # TODO: Put in proper file browse here!
