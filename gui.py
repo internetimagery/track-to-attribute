@@ -1,7 +1,8 @@
 # Let thee control the stuff!
 import maya.cmds as cmds
+import logic
 
-def temp():
+def get_tracker():
     """ temporary return data for testing """
     return {
     "track1": [
@@ -14,16 +15,18 @@ def temp():
         ]
     }
 
-NONE = "( None )"
+NONE = "---"
 
 class Window(object):
     def __init__(s):
-        s.track_data = {}
+        s.data = {}
         s.win = cmds.window("Tracker to Attribute")
         col = cmds.columnLayout(adj=True)
         s.nuke = cmds.textFieldButtonGrp(l="Nuke File:", bl="Browse", adj=2, bc=s.browse)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
+        cmds.menuItem(l=NONE, p=s.tracker)
         s.stabalize = cmds.optionMenuGrp(l="Stabalize:", adj=2) + "|OptionMenu"
+        cmds.menuItem(l=NONE, p=s.stabalize)
         s.outX = cmds.textFieldButtonGrp(l="Output X:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outX))
         s.outY = cmds.textFieldButtonGrp(l="Output Y:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outY))
         s.scale = cmds.intFieldGrp(l="Scale X / Y:", v1=1, v2=1, nf=2)
@@ -32,34 +35,41 @@ class Window(object):
 
     def browse(s):
         """ Open file browser """
-        # TODO: Put in proper file browse here!
-        s.track_data = temp()
+        # path = cmds.fileDialog2(fm=1, ff="Nuke files (*.nk)")
+        path = cmds.fileDialog2(fm=1)
+        if path:
+            path = path[0]
+            # TODO: Put in proper file browse here!
+            s.data = get_tracker()
 
-        # Clear out any existing tracks.
-        remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
-        remove += cmds.optionMenu(s.stabalize, q=True, ill=True) or []
-        if remove:
-            cmds.deleteUI(remove)
-        # Add current tracks.
-        cmds.menuItem(l=NONE, p=s.stabalize)
-        for track in s.track_data:
-            cmds.menuItem(l=track, p=s.tracker)
-            cmds.menuItem(l=track, p=s.stabalize)
-        cmds.button(s.go, e=True, en=True)
+            # Clear out any existing tracks.
+            remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
+            remove += cmds.optionMenu(s.stabalize, q=True, ill=True) or []
+            if remove:
+                cmds.deleteUI(remove)
+            # Add current tracks.
+            cmds.menuItem(l=NONE, p=s.stabalize)
+            for track in s.data:
+                cmds.menuItem(l=track, p=s.tracker)
+                cmds.menuItem(l=track, p=s.stabalize)
+            cmds.button(s.go, e=True, en=True)
 
     def get_attr(s, gui):
         """ Grab attribute """
-        print "Getting attribute"
+        cmds.textFieldButtonGrp(gui, e=True, tx=logic.get_attribute())
 
     def run(s, *_):
         """ Run everything! """
         tracker = s.data[cmds.optionMenu(s.tracker, q=True, v=True)]
-        stabalize = s.data[cmds.optionMenu(s.stabalize, q=True, v=True)]
+        stab_key = cmds.optionMenu(s.stabalize, q=True, v=True)
+        stabalize = [] if stab_key == NONE else s.data[stab_key]
 
-        outX = cmds.textFieldButtonGrp(x.outX, q=True, tx=True)
-        outY = cmds.textFieldButtonGrp(x.outY, q=True, tx=True)
+        outX = cmds.textFieldButtonGrp(s.outX, q=True, tx=True)
+        outY = cmds.textFieldButtonGrp(s.outY, q=True, tx=True)
 
         scale = cmds.intFieldGrp(s.scale, q=True, v=True)
+
+        # logic.apply_data(tracker, stabalize, outX, outY, scale[0], scale[1])
 
         print tracker
         print stabalize

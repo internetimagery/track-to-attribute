@@ -43,27 +43,33 @@ def set_keys(attr, startF, keys):
     for frame in keys:
         cmds.setKeyframe(attr, t=frame, v=keys[frame])
 
-def apply_data(tracker, stabalize, data, attrX, attrY, scaleX, scaleY):
+def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
     """ Take data. Apply it to attributes. """
+    if attrX == attrY:
+        raise RuntimeError("Both attributes are the same.")
 
-    # Get data
-    tracker_data = data[tracker]
-    stabalize_data = data[stabalize] if stabalize else []
+        # Calculate data
+        dataX = {}
+        dataY = {}
+        def calc(data, stab, scale, output):
+            for frame in data:
+                try:
+                    output[frame] = (data[frame] - stab[frame]) * scale
+                except KeyError:
+                    output[frame] = data[frame] * scale
+        calc(tracker[0], stabalize[0], scaleX, dataX) # X
+        calc(tracker[1], stabalize[1], scaleY, dataY) # Y
 
-    # Calculate data
-    dataX = {}
-    dataY = {}
-    def calc(data, stab, scale, output):
-        for frame in data:
-            try:
-                output[frame] = (data[frame] - stab[frame]) * scale
-            except KeyError:
-                output[frame] = data[frame] * scale
-    calc(tracker_data[0], stabalize_data[0], scaleX, dataX) # X
-    calc(tracker_data[1], stabalize_data[1], scaleY, dataY) # Y
-
-    # Apply data
-    if dataX:
-        set_keys(attrX, dataX)
-    if dataY:
-    if attrY:
+    err = cmds.undoInfo(openChunk=True)
+    try:
+        # Apply data
+        if dataX:
+            set_keys(attrX, dataX)
+        if dataY:
+            set_keys(attrY, dataY)
+    except Exception as err:
+        raise
+    finally:
+        cmds.undoInfo(closeChunk=True)
+        if err:
+            cmds.undo()
