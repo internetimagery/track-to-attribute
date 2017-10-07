@@ -40,9 +40,8 @@ def get_attribute():
 
 def set_keys(attr, startF, keys):
     """ Set keys on attribute """
-    for i, key in enumerate(keys):
-        frame = i + startF
-        cmds.setKeyframe(attr, t=frame, v=key)
+    for frame in keys:
+        cmds.setKeyframe(attr, t=frame, v=keys[frame])
 
 def apply_data(tracker, stabalize, data, attrX, attrY, scaleX, scaleY):
     """ Take data. Apply it to attributes. """
@@ -52,19 +51,19 @@ def apply_data(tracker, stabalize, data, attrX, attrY, scaleX, scaleY):
     stabalize_data = data[stabalize] if stabalize else []
 
     # Calculate data
-    dataX = []
-    dataY = []
-    for i, (x, y) in enumerate(zip(*tracker_data)):
-        try:
-            dataX.append((x - stabalize_data[0][i]) * scaleX)
-            dataY.append((y - stabalize_data[1][i]) * scaleY)
-        except IndexError:
-            dataX.append(x * scaleX)
-            dataY.append(x * scaleY)
+    dataX = {}
+    dataY = {}
+    def calc(data, stab, scale, output):
+        for frame in data:
+            try:
+                output[frame] = (data[frame] - stab[frame]) * scale
+            except KeyError:
+                output[frame] = data[frame] * scale
+    calc(tracker_data[0], stabalize_data[0], scaleX, dataX) # X
+    calc(tracker_data[1], stabalize_data[1], scaleY, dataY) # Y
 
     # Apply data
-    start = cmds.currentTime(q=True)
-    if attrX:
-        set_keys(attrX, start, dataX)
+    if dataX:
+        set_keys(attrX, dataX)
+    if dataY:
     if attrY:
-        set_keys(attrY, start, dataY)
