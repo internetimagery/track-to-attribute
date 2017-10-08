@@ -92,9 +92,10 @@ def get_tracks(file_path, nuke="nuke"):
 
 def get_attribute():
     """ Get selected attribute from channelbox """
-    for obj, attr in zip(cmds.ls(sl=True) or [], cmds.channelBox("mainChannelBox", sma=True, q=True) or []):
-        if cmds.attributeQuery(attr, n=obj, ex=True):
-            return "{}.{}".format(obj, attr)
+    for obj in cmds.ls(sl=True) or []:
+        for attr in cmds.channelBox("mainChannelBox", sma=True, q=True) or []:
+            if cmds.attributeQuery(attr, n=obj, ex=True):
+                return "{}.{}".format(obj, attr)
     return ""
 
 def set_keys(attr, keys):
