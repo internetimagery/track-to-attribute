@@ -14,12 +14,13 @@ def get_tracker(file_path, nuke_path="nuke"):
     # Validate file and build command
     if not os.path.isfile(file_path):
         raise RuntimeError("File does not exist: {}".format(file_path))
-    command = "{} -t -- '{}' '{}'".format(
+    command = "\"{}\" -t -- \"{}\" \"{}\"".format(
         nuke_path,
         os.path.join(os.path.dirname(__file__), "track_parse.py"),
         file_path)
 
     # Run nuke and collect data.
+    print command
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     data = {}
     while True:
@@ -27,7 +28,7 @@ def get_tracker(file_path, nuke_path="nuke"):
         if not line:
             break
         try:
-            data = pickle.loads(base64.decode(line))
+            data = pickle.loads(base64.b64decode(line))
         except TypeError, pickle.UnpicklingError:
             pass
     err = process.stderr.read()
@@ -55,11 +56,6 @@ def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
 
         attr = (attrX, attrY)
         scale = (scaleX, scaleY)
-
-        # Do it!
-        for curve in tracker:
-            for frame in curve:
-
 
         # Calculate data
         dataX = {}

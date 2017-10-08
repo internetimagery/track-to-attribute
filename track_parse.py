@@ -32,12 +32,12 @@ def run(file_path):
     for node in (n["tracks"].toScript() for n in nuke.allNodes() if n.Class() == "Tracker4"):
         for track in re.finditer(r"\"([^\"]+)\"\s+{\s*curve\s+([\d\s\.\-xe]+)}\s+{\s*curve\s+([\d\s\.\-xe]+)}", node):
             name = track.group(1)
-            X = parse_curve(track.group(2))
+            x = parse_curve(track.group(2))
             y = parse_curve(track.group(3))
             trackers[name] = (x, y)
 
     # Send tracker data back to calling process
-    print(base64.encode(pickle.dumps(trackers)))
+    print(base64.b64encode(pickle.dumps(trackers)))
     return True
 
 if __name__ == '__main__':
