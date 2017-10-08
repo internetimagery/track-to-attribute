@@ -1,7 +1,11 @@
 # Parse out tracker data.
 from __future__ import print_function
-import json
 import re
+import base64
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 def parse_curve(curve):
     """ Parse curve data to dict """
@@ -26,14 +30,14 @@ def run(file_path):
     # Parse tracker data
     trackers = {}
     for node in (n["tracks"].toScript() for n in nuke.allNodes() if n.Class() == "Tracker4"):
-        for track in re.finditer(r"\"([^\"])\"\s*{\s*curve\s*([\d\s\.\-xe])}\s*{\s*curve\s*([\d\s\.\-xe])}", node):
+        for track in re.finditer(r"\"([^\"]+)\"\s+{\s*curve\s+([\d\s\.\-xe]+)}\s+{\s*curve\s+([\d\s\.\-xe]+)}", node):
             name = track.group(1)
             X = parse_curve(track.group(2))
             y = parse_curve(track.group(3))
             trackers[name] = (x, y)
 
     # Send tracker data back to calling process
-    print(json.dumps(trackers))
+    print(base64.encode(pickle.dumps(trackers)))
     return True
 
 if __name__ == '__main__':

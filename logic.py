@@ -2,10 +2,14 @@
 import maya.cmds as cmds
 import subprocess
 import os.path
-import json
+import base64
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 def get_tracker(file_path, nuke_path="nuke"):
-    """ Get tracker data from nuke file """
+    """ Get tracker data from nuke file. """
 
     # Validate file and build command
     if not os.path.isfile(file_path):
@@ -23,8 +27,8 @@ def get_tracker(file_path, nuke_path="nuke"):
         if not line:
             break
         try:
-            data = json.loads(line)
-        except ValueError:
+            data = pickle.loads(base64.decode(line))
+        except TypeError, pickle.UnpicklingError:
             pass
     err = process.stderr.read()
     if err:
@@ -40,13 +44,22 @@ def get_attribute():
 
 def set_keys(attr, startF, keys):
     """ Set keys on attribute """
+    start = keys[min(sorted(keys.keys()))]
     for frame in keys:
-        cmds.setKeyframe(attr, t=frame, v=keys[frame])
+        cmds.setKeyframe(attr, t=frame, v=keys[frame] - start)
 
 def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
     """ Take data. Apply it to attributes. """
     if attrX == attrY:
         raise RuntimeError("Both attributes are the same.")
+
+        attr = (attrX, attrY)
+        scale = (scaleX, scaleY)
+
+        # Do it!
+        for curve in tracker:
+            for frame in curve:
+
 
         # Calculate data
         dataX = {}
