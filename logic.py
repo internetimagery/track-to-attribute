@@ -4,10 +4,23 @@ import maya.cmds as cmds
 import subprocess
 import os.path
 import base64
+import re
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+def parse_frames(curve):
+    """ Parse out keyframes from data """
+    result = {}
+    frame = 0
+    for num in curve.split(" "):
+        if num[0] == "x":
+            frame = int(num[1:])
+        else:
+            result[frame] = float(num)
+            frame += 1
+    return result
 
 def get_tracks_direct(filepath):
     """ Read out some info from Nuke file """
@@ -84,9 +97,9 @@ def get_attribute():
             return "{}.{}".format(obj, attr)
     return ""
 
-def set_keys(attr, startF, keys):
+def set_keys(attr, keys):
     """ Set keys on attribute """
-    start = keys[min(sorted(keys.keys()))]
+    start = keys[min(keys.keys())]
     for frame in keys:
         cmds.setKeyframe(attr, t=frame, v=keys[frame] - start)
 
@@ -95,31 +108,26 @@ def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
     if attrX == attrY:
         raise RuntimeError("Both attributes are the same.")
 
-        attr = (attrX, attrY)
-        scale = (scaleX, scaleY)
+    attr = (attrX, attrY)
+    scale = (scaleX, scaleY)
+    data = ({},{})
 
-        # Calculate data
-        dataX = {}
-        dataY = {}
-        def calc(data, stab, scale, output):
-            for frame in data:
-                try:
-                    output[frame] = (data[frame] - stab[frame]) * scale
-                except KeyError:
-                    output[frame] = data[frame] * scale
-        calc(tracker[0], stabalize[0], scaleX, dataX) # X
-        calc(tracker[1], stabalize[1], scaleY, dataY) # Y
+    for i in range(len(tracker)):
+        for frame in tracker[i]:
+            try:
+                data[i][frame] = (tracker[i][frame] - stabalize[i][frame]) * scale[i]
+            except (KeyError, IndexError):
+                data[i][frame] = tracker[i][frame] * scale[i]
 
     err = cmds.undoInfo(openChunk=True)
     try:
-        # Apply data
-        if dataX:
-            set_keys(attrX, dataX)
-        if dataY:
-            set_keys(attrY, dataY)
+        for i in range(len(tracker)):
+            if data[i] and attr[i]:
+                set_keys(attr[i], data[i])
     except Exception as err:
         raise
     finally:
+        cmds.select(cmds.ls(sl=True))
         cmds.undoInfo(closeChunk=True)
         if err:
             cmds.undo()

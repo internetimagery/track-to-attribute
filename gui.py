@@ -48,6 +48,7 @@ class Window(object):
         if path:
             nuke_exe = cmds.textFieldButtonGrp(s.nuke_exe, q=True, tx=True) if os.name == "nt" else "nuke"
             s.data = logic.get_tracks(path[0], nuke_exe)
+            cmds.textFieldButtonGrp(s.nuke, e=True, tx=path[0])
 
             # Clear out any existing tracks.
             remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
