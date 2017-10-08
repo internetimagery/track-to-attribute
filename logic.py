@@ -1,4 +1,5 @@
 # Make things work!
+from __future__ import print_function
 import maya.cmds as cmds
 import subprocess
 import os.path
@@ -8,8 +9,33 @@ try:
 except ImportError:
     import pickle
 
-def get_tracker(file_path, nuke_path="nuke"):
-    """ Get tracker data from nuke file. """
+def get_tracks_direct(filepath):
+    """ Read out some info from Nuke file """
+    with open(filepath, "r") as f:
+        tracks = re.compile(r"tracks[\s{]+\d+\s+(\d+)\s+(\d+)\s+}") # :: tracks { { 1 2 3 }
+        parse = re.compile(r"\"([^\"]+)\"\s+{curve\s+([-\d\.\sex]+)}\s+{curve\s+([-\d\.\sex]+)}") # :: "tracker" {curve x12 34.56 67.54-e32 43.4554}
+        wait = 0
+        curve = 0
+        while True:
+            # Run through each line
+            line = f.readline()
+            if not line:
+                break
+            if wait: # We have a tracker nodes "tracks" knob
+                wait -= 1
+            elif curve: # We're looking at a curves data
+                curve -= 1
+                match = parse.search(line)
+                if match:
+                    yield (match.group(1), parse_frames(match.group(2)), parse_frames(match.group(3))) # Name, X, Y
+            else: # Looking for a tracker
+                match = tracks.search(line)
+                if match:
+                    wait = int(match.group(1)) + 2 # Plus 2 for closing and opening brackets
+                    curve = int(match.group(2))
+
+def get_tracks_indirect(file_path, nuke_path="nuke"):
+    """ Get tracker data from nuke file, by loading nuke. """
 
     # Validate file and build command
     if not os.path.isfile(file_path):
@@ -34,6 +60,18 @@ def get_tracker(file_path, nuke_path="nuke"):
     if err:
         raise RuntimeError(err)
     return data
+
+def get_tracks(file_path, nuke="nuke"):
+    """ Get Tracker data first by parsing nuke file and otherwise by loading nuke """
+    # First parse the file directly.
+    try:
+        result = {}
+        for name, x, y in get_tracks_direct(file_path):
+            result[name] = (x, y)
+        return result
+    except Exception as err:
+        print("Failed to parse Nuke. Falling back to loading nuke.. {}".format(err))
+        return get_tracks_indirect(file_path, nuke)
 
 def get_attribute():
     """ Get selected attribute from channelbox """
