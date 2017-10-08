@@ -12,15 +12,18 @@ except ImportError:
 def get_tracks_direct(filepath):
     """ Read out some info from Nuke file """
     with open(filepath, "r") as f:
-        tracks = re.compile(r"tracks[\s{]+\d+\s+(\d+)\s+(\d+)\s+}") # :: tracks { { 1 2 3 }
+        tracks = re.compile(r"tracks.+?\s(\d+)\s+(\d+)\s+}", re.DOTALL) # :: tracks { { 1 2 3 }
         parse = re.compile(r"\"([^\"]+)\"\s+{curve\s+([-\d\.\sex]+)}\s+{curve\s+([-\d\.\sex]+)}") # :: "tracker" {curve x12 34.56 67.54-e32 43.4554}
-        wait = 0
-        curve = 0
+        wait = 0 # Throwing out the header
+        curve = 0 # Reading our curves
+        reading_tracker = False # In a node we can handle?
         while True:
             # Run through each line
             line = f.readline()
             if not line:
                 break
+            if line.startswith("Tracker4"):
+                reading_tracker = True
             if wait: # We have a tracker nodes "tracks" knob
                 wait -= 1
             elif curve: # We're looking at a curves data
@@ -28,11 +31,12 @@ def get_tracks_direct(filepath):
                 match = parse.search(line)
                 if match:
                     yield (match.group(1), parse_frames(match.group(2)), parse_frames(match.group(3))) # Name, X, Y
-            else: # Looking for a tracker
+            elif reading_tracker: # Looking for a tracker
                 match = tracks.search(line)
                 if match:
                     wait = int(match.group(1)) + 2 # Plus 2 for closing and opening brackets
                     curve = int(match.group(2))
+                    reading_tracker = False
 
 def get_tracks_indirect(file_path, nuke_path="nuke"):
     """ Get tracker data from nuke file, by loading nuke. """
