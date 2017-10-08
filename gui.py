@@ -1,6 +1,7 @@
 # Let thee control the stuff!
 import maya.cmds as cmds
 import logic
+import os
 
 def get_tracker():
     """ temporary return data for testing """
@@ -22,6 +23,8 @@ class Window(object):
         s.data = {}
         s.win = cmds.window("Tracker to Attribute")
         col = cmds.columnLayout(adj=True)
+        if os.name == "nt":
+            s.nuke_exe = cmds.textFieldButtonGrp(l="Nuke executable:", bl="Browse", adj=2, bc=s.browse_nuke)
         s.nuke = cmds.textFieldButtonGrp(l="Nuke File:", bl="Browse", adj=2, bc=s.browse)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
         cmds.menuItem(l=NONE, p=s.tracker)
@@ -33,13 +36,18 @@ class Window(object):
         s.go = cmds.button(l="Keyframe!", en=False, c=s.run)
         cmds.showWindow()
 
+    def browse_nuke(s):
+        """ Pick nuke exe file """
+        path = cmds.fileDialog2(fm=1, ff="Nuke executable (*.exe)")
+        if path:
+            cmds.textFieldButtonGrp(s.nuke_exe, e=True, tx=path[0])
+
     def browse(s):
         """ Open file browser """
         path = cmds.fileDialog2(fm=1, ff="Nuke files (*.nk)")
         if path:
-            path = path[0]
-            # TODO: Put in proper file browse here!
-            s.data = get_tracker()
+            nuke_exe = cmds.textFieldButtonGrp(s.nuke_exe, q=True, tx=True) if os.name == "nt" else "nuke"
+            s.data = logic.get_tracker(path[0], nuke_exe)
 
             # Clear out any existing tracks.
             remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
@@ -68,10 +76,4 @@ class Window(object):
 
         scale = cmds.intFieldGrp(s.scale, q=True, v=True)
 
-        # logic.apply_data(tracker, stabalize, outX, outY, scale[0], scale[1])
-
-        print tracker
-        print stabalize
-        print outX
-        print outY
-        print scale
+        logic.apply_data(tracker, stabalize, outX, outY, scale[0], scale[1])

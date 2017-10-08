@@ -20,7 +20,6 @@ def get_tracker(file_path, nuke_path="nuke"):
         file_path)
 
     # Run nuke and collect data.
-    print command
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     data = {}
     while True:
