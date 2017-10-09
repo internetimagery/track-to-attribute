@@ -30,7 +30,7 @@ def run(file_path):
     # Parse tracker data
     trackers = {}
     for node in (n["tracks"].toScript() for n in nuke.allNodes() if n.Class() == "Tracker4"):
-        for track in re.finditer(r"\"([^\"]+)\"\s+{\s*curve\s+([\d\s\.\-xe]+)}\s+{\s*curve\s+([\d\s\.\-xe]+)}", node):
+        for track in re.finditer(r"\"(?:\\.|[^\"\\])*\"\s+{\s*curve\s+([\d\s\.\-xe]+)}\s+{\s*curve\s+([\d\s\.\-xe]+)}", node):
             name = track.group(1)
             x = parse_curve(track.group(2))
             y = parse_curve(track.group(3))
