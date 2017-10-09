@@ -26,7 +26,7 @@ def get_tracks_direct(filepath):
     """ Read out some info from Nuke file """
     with open(filepath, "r") as f:
         tracks = re.compile(r"tracks.+?\s(\d+)\s+(\d+)\s+}", re.DOTALL) # :: tracks { { 1 2 3 }
-        parse = re.compile(r"\"(?:\\.|[^\"\\])*\"\s+{curve\s+([-\d\.\sex]+)}\s+{curve\s+([-\d\.\sex]+)}") # :: "tracker" {curve x12 34.56 67.54-e32 43.4554}
+        parse = re.compile(r"\"((?:\\.|[^\"\\])*)\"\s+{curve\s+([-\d\.\sex]+)}\s+{curve\s+([-\d\.\sex]+)}") # :: "tracker" {curve x12 34.56 67.54-e32 43.4554}
         wait = 0 # Throwing out the header
         curve = 0 # Reading our curves
         reading_tracker = False # In a node we can handle?
