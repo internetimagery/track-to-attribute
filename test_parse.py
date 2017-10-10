@@ -77,7 +77,11 @@ def parse(path):
         if node and node[0] == "Tracker4":
             for attr in parse_line(read_str(node[1])):
                 if attr and attr[0] == "tracks":
-                    print len(attr)
+                    for col, row in enumerate(parse_line(read_str(attr[1]))):
+                        if col == 2: # Animation tracks
+                            print row
+                        #     for data in parse_line(read_str(row)):
+                        #         print "HI"
 
 
 
