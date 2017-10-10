@@ -2,7 +2,7 @@
 
 import sys
 
-def read_char(path):
+def read_file(path):
     """ Read file character at a time """
     with open(path, "r") as f:
         while True:
@@ -10,6 +10,11 @@ def read_char(path):
             if not char:
                 break
             yield char
+
+def read_str(text):
+    """ Read text character at a time """
+    for char in text:
+        yield char
 
 def parse_escapes(connection, esc="\\"):
     """ Pull out escaped characters as chunks """
@@ -27,12 +32,13 @@ def parse_brackets(connection, inB="{", outB="}"):
     depth = 1 # Assume we're already one deep
     token = ""
     for char in connection:
-        token += char
         if char == inB:
             depth += 1
         elif char == outB:
             depth -= 1
-        if not depth:
+        if depth:
+            token += char
+        else:
             return token
 
 def parse_line(connection, sep=" ", end="\n"):
@@ -41,26 +47,37 @@ def parse_line(connection, sep=" ", end="\n"):
     result = []
     for char in connection:
         if char == sep:
-            result.append(token)
-            token = ""
+            token = token.strip()
+            if token:
+                result.append(token)
+                token = ""
         elif char == end:
-            result.append(token)
+            token = token.strip()
+            if token:
+                result.append(token)
+                token = ""
             yield result
             result = []
-            token = ""
         else:
             token += char
             if char == "{":
-                result.append(parse_brackets(connection))
-                token = ""
+                token = parse_brackets(connection).strip()
+                if token:
+                    result.append(token)
+                    token = ""
+    token = token.strip()
+    if token:
+        result.append(token)
     if result:
         yield result
 
 def parse(path):
     """ Parse file path """
-    connection = read_char(path)
-    for line in parse_line(connection):
-        print line
+    for node in parse_line(read_file(path)):
+        if node and node[0] == "Tracker4":
+            for attr in parse_line(read_str(node[1])):
+                if attr and attr[0] == "tracks":
+                    print len(attr)
 
 
 
