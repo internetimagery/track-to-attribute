@@ -15,8 +15,8 @@
 * Scale the curve (from the extreme side) till the desired position in the viewport is also attained.
 * All the keys between the extremes should work just fine.
 
-A good rule of thunb is to track as many joints as you can. Then use the stabalize field to pick the joint next down the chain. ie: tracking a nose for head rotation data would stabalize to the chest/neck. Tracking the chest would stabalize to the hips. Hips to the environment (still object tracks camera shake).
+A good rule of thumb is to track as many points as you can. Then use the stabalize field to pick the body part next down the chain. ie: tracking a nose for head rotation data would stabalize to the chest/neck. Tracking the chest would stabalize to the hips. Hips to the environment (still object tracks camera shake).
 
-Why?
+####Why?
 
-This is useful as a poor-mans motion capture. A quick way to get data out of video footage and into your scene. A niche tool, but certainly useful every now and again.
+This is useful as a poor-mans motion capture. A quick way to get data out of video footage and into your scene. A niche tool for sure. But certainly useful every now and again.
