@@ -23,8 +23,6 @@ class Window(object):
         s.data = {}
         s.win = cmds.window("Tracker to Attribute")
         col = cmds.columnLayout(adj=True)
-        if os.name == "nt":
-            s.nuke_exe = cmds.textFieldButtonGrp(l="Nuke executable:", bl="Browse", adj=2, bc=s.browse_nuke)
         s.nuke = cmds.textFieldButtonGrp(l="Nuke File:", bl="Browse", adj=2, bc=s.browse)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
         cmds.menuItem(l=NONE, p=s.tracker)
@@ -36,18 +34,11 @@ class Window(object):
         s.go = cmds.button(l="Keyframe!", en=False, c=s.run)
         cmds.showWindow()
 
-    def browse_nuke(s):
-        """ Pick nuke exe file """
-        path = cmds.fileDialog2(fm=1, ff="Nuke executable (*.exe)")
-        if path:
-            cmds.textFieldButtonGrp(s.nuke_exe, e=True, tx=path[0])
-
     def browse(s):
         """ Open file browser """
         path = cmds.fileDialog2(fm=1, ff="Nuke files (*.nk)")
         if path:
-            nuke_exe = cmds.textFieldButtonGrp(s.nuke_exe, q=True, tx=True) if os.name == "nt" else "nuke"
-            s.data = logic.get_tracks(path[0], nuke_exe)
+            s.data = logic.get_tracks(path[0])
             cmds.textFieldButtonGrp(s.nuke, e=True, tx=path[0])
 
             # Clear out any existing tracks.

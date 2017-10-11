@@ -22,7 +22,7 @@ def parse_frames(curve):
             frame += 1
     return result
 
-def get_tracks(file_path, nuke="nuke"):
+def get_tracks(file_path):
     """ Get Tracker data. """
     # First parse the file directly
     with open(file_path, "r") as f:
