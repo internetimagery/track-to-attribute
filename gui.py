@@ -42,20 +42,23 @@ class Window(object):
     def load_nuke(s, path):
         """ Load nuke file """
         # Clear out any existing tracks.
+        path = path.strip()
         remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
         remove += cmds.optionMenu(s.stabalize, q=True, ill=True) or []
         if remove:
             cmds.deleteUI(remove)
-        # Add current tracks.
-        cmds.menuItem(l=NONE, p=s.stabalize)
 
-        s.data = logic.get_tracks(path)
-        cmds.textFieldButtonGrp(s.nuke, e=True, tx=path)
+        if path:
 
-        for track in s.data:
-            cmds.menuItem(l=track, p=s.tracker)
-            cmds.menuItem(l=track, p=s.stabalize)
-        cmds.button(s.go, e=True, en=True)
+            s.data = logic.get_tracks(path)
+            cmds.textFieldButtonGrp(s.nuke, e=True, tx=path)
+
+            # Add current tracks.
+            cmds.menuItem(l=NONE, p=s.stabalize)
+            for track in s.data:
+                cmds.menuItem(l=track, p=s.tracker)
+                cmds.menuItem(l=track, p=s.stabalize)
+            cmds.button(s.go, e=True, en=True)
 
     def get_attr(s, gui):
         """ Grab attribute """
