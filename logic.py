@@ -36,6 +36,20 @@ def parse_nuke(file_):
                 )
     return result
 
+def parse_natron(file_):
+    """ Parse out data from Natron """
+    print("Reading Natron file.")
+    result = {}
+    for node in ET.fromstring(f.read()).findall("./Project/NodesCollection/item/TrackerContext/Item"):
+        curves = []
+        for curve in node.findall("Item/[Name='centerPoint']/item/Curve/KeyFrameSet"):
+            keys = {}
+            for key in curve.findall("item"):
+                keys[float(key.find("Time").text)] = float(key.find("Value").text)
+            curves.append(keys)
+        result[node.find("Label").text] = curves
+    return result
+
 def get_tracks(file_path):
     """ Get Tracker data. """
     if not os.path.isfile(file_path):
@@ -43,7 +57,10 @@ def get_tracks(file_path):
     with open(file_path, "r") as f:
         if file_path[-3:] == ".nk":
             return parse_nuke(f.read())
-        return {}
+        elif file_path[-4:] == ".ntp":
+            return parse_natron(f.read())
+        else:
+            raise RuntimeError("File type not (yet) supported.")
 
 def get_attribute():
     """ Get selected attribute from channelbox """

@@ -18,8 +18,6 @@ def parse(file_):
             result[name] = curves
         return result
 
-
-
 if __name__ == '__main__':
     from pprint import pprint
     print parse(sys.argv[1])
