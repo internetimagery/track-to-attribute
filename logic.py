@@ -76,7 +76,8 @@ def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
     except Exception as err:
         raise
     finally:
-        cmds.select(cmds.ls(sl=True))
+        # Do something undoable
+        cmds.select(cmds.ls(sl=True), r=True)
         cmds.undoInfo(closeChunk=True)
         if err:
             cmds.undo()
