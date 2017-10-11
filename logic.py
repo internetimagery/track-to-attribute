@@ -24,7 +24,8 @@ def parse_frames(curve):
 
 def get_tracks(file_path):
     """ Get Tracker data. """
-    # First parse the file directly
+    if not os.path.isfile(file_path):
+        raise RuntimeError("File does not exist: {}".format(file_path))
     with open(file_path, "r") as f:
         result = {}
         nodes = re.compile(r"Tracker4\s{.+?ypos[-\d\n\s]+}", re.DOTALL)

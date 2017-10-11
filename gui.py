@@ -3,27 +3,23 @@ import maya.cmds as cmds
 import logic
 import os
 
-def get_tracker():
-    """ temporary return data for testing """
-    return {
-    "track1": [
-        {0: 2, 1: 3, 4: 4, 5: 5},
-        {0: 4, 1: 2, 4: 7, 5: 6}
-        ],
-    "other": [
-        {0: 2, 1: 3, 4: 4, 5: 5},
-        {0: 4, 1: 2, 4: 7, 5: 6}
-        ]
-    }
-
 NONE = "---"
+
+def real_path(path):
+    """ Get closest real path up the tree """
+    while True:
+        new_path = os.path.dirname(path)
+        if new_path == path:
+            return ""
+        elif os.path.isdir(new_path):
+            return new_path
 
 class Window(object):
     def __init__(s):
         s.data = {}
         s.win = cmds.window("Tracker to Attribute")
         col = cmds.columnLayout(adj=True)
-        s.nuke = cmds.textFieldButtonGrp(l="Nuke File:", bl="Browse", adj=2, bc=s.browse)
+        s.nuke = cmds.textFieldButtonGrp(l="Nuke File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_nuke)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
         cmds.menuItem(l=NONE, p=s.tracker)
         s.stabalize = cmds.optionMenuGrp(l="Stabalize:", adj=2) + "|OptionMenu"
@@ -36,22 +32,30 @@ class Window(object):
 
     def browse(s):
         """ Open file browser """
-        path = cmds.fileDialog2(fm=1, ff="Nuke files (*.nk)")
+        path = cmds.fileDialog2(
+            fm=1,
+            ff="Nuke files (*.nk)",
+            dir=real_path(cmds.textFieldButtonGrp(s.nuke, q=True, tx=True)))
         if path:
-            s.data = logic.get_tracks(path[0])
-            cmds.textFieldButtonGrp(s.nuke, e=True, tx=path[0])
+            s.load_nuke(path[0])
 
-            # Clear out any existing tracks.
-            remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
-            remove += cmds.optionMenu(s.stabalize, q=True, ill=True) or []
-            if remove:
-                cmds.deleteUI(remove)
-            # Add current tracks.
-            cmds.menuItem(l=NONE, p=s.stabalize)
-            for track in s.data:
-                cmds.menuItem(l=track, p=s.tracker)
-                cmds.menuItem(l=track, p=s.stabalize)
-            cmds.button(s.go, e=True, en=True)
+    def load_nuke(s, path):
+        """ Load nuke file """
+        # Clear out any existing tracks.
+        remove = cmds.optionMenu(s.tracker, q=True, ill=True) or []
+        remove += cmds.optionMenu(s.stabalize, q=True, ill=True) or []
+        if remove:
+            cmds.deleteUI(remove)
+        # Add current tracks.
+        cmds.menuItem(l=NONE, p=s.stabalize)
+
+        s.data = logic.get_tracks(path)
+        cmds.textFieldButtonGrp(s.nuke, e=True, tx=path)
+
+        for track in s.data:
+            cmds.menuItem(l=track, p=s.tracker)
+            cmds.menuItem(l=track, p=s.stabalize)
+        cmds.button(s.go, e=True, en=True)
 
     def get_attr(s, gui):
         """ Grab attribute """
