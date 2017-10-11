@@ -24,6 +24,7 @@ def parse_frames(curve):
 
 def parse_nuke(file_):
     """ Parse out data from nuke """
+    print("Reading Nuke file.")
     result = {}
     nodes = re.compile(r"Tracker4\s{.+?ypos[-\d\n\s]+}", re.DOTALL)
     trackers = re.compile(r"\"((?:\\.|[^\"\\])*)\"\s+{curve\s+([-\d\.\sex]+)}\s+{curve\s+([-\d\.\sex]+)}") # :: "tracker" {curve x12 34.56 67.54-e32 43.4554}
