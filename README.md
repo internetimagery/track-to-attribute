@@ -1,9 +1,9 @@
-# Take tracker data from nuke to maya attributes
+# Take tracker data from nuke/natron to maya attributes
 
     import track2attr
     track2attr.main()
     
-* Open a nuke file.
+* Open a nuke/natron file with a tracker node (and trackers).
 * Select one of the trackers in the drop down.
 * Select an attribute in the channelbox (maya) and press one of the "<< CB" buttons.
 * Click "Keyframe" to set your keys.
