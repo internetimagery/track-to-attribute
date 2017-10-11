@@ -1,5 +1,6 @@
 # Make things work!
 from __future__ import print_function
+import xml.etree.ElementTree as ET
 import maya.cmds as cmds
 import subprocess
 import os.path
@@ -40,7 +41,7 @@ def parse_natron(file_):
     """ Parse out data from Natron """
     print("Reading Natron file.")
     result = {}
-    for node in ET.fromstring(f.read()).findall("./Project/NodesCollection/item/TrackerContext/Item"):
+    for node in ET.fromstring(file_).findall("./Project/NodesCollection/item/TrackerContext/Item"):
         curves = []
         for curve in node.findall("Item/[Name='centerPoint']/item/Curve/KeyFrameSet"):
             keys = {}

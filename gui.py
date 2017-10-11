@@ -19,7 +19,7 @@ class Window(object):
         s.data = {}
         s.win = cmds.window("Tracker to Attribute")
         col = cmds.columnLayout(adj=True)
-        s.nuke = cmds.textFieldButtonGrp(l="Nuke File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_nuke)
+        s.nuke = cmds.textFieldButtonGrp(l="Tracker File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_nuke)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
         # cmds.menuItem(l=NONE, p=s.tracker)
         s.stabalize = cmds.optionMenuGrp(l="Stabalize:", adj=2) + "|OptionMenu"
@@ -34,7 +34,7 @@ class Window(object):
         """ Open file browser """
         path = cmds.fileDialog2(
             fm=1,
-            ff="Nuke files (*.nk)",
+            ff="Tracker file (*.nk *.ntp)",
             dir=real_path(cmds.textFieldButtonGrp(s.nuke, q=True, tx=True)))
         if path:
             s.load_nuke(path[0])
