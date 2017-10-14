@@ -22,10 +22,11 @@ class Window(object):
         s.nuke = cmds.textFieldButtonGrp(l="Tracker File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_nuke)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
         # cmds.menuItem(l=NONE, p=s.tracker)
-        s.stabalize = cmds.optionMenuGrp(l="Stabalize:", adj=2) + "|OptionMenu"
+        s.stabalize = cmds.optionMenuGrp(l="Stabalize / Angle:", adj=2) + "|OptionMenu"
         # cmds.menuItem(l=NONE, p=s.stabalize)
         s.outX = cmds.textFieldButtonGrp(l="Output X:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outX))
         s.outY = cmds.textFieldButtonGrp(l="Output Y:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outY))
+        s.outA = cmds.textFieldButtonGrp(l="Angle:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outA))
         s.scale = cmds.intFieldGrp(l="Scale X / Y:", v1=1, v2=1, nf=2)
         s.go = cmds.button(l="Keyframe!", en=False, c=s.run)
         cmds.showWindow()
@@ -72,7 +73,9 @@ class Window(object):
 
         outX = cmds.textFieldButtonGrp(s.outX, q=True, tx=True)
         outY = cmds.textFieldButtonGrp(s.outY, q=True, tx=True)
+        outA = cmds.textFieldButtonGrp(s.outA, q=True, tx=True)
+
 
         scale = cmds.intFieldGrp(s.scale, q=True, v=True)
 
-        logic.apply_data(tracker, stabalize, outX, outY, scale[0], scale[1])
+        logic.apply_data(tracker, stabalize, outX, outY, outA, scale[0], scale[1])

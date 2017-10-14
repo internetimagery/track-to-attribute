@@ -1,10 +1,11 @@
 # Make things work!
-from __future__ import print_function
+from __future__ import print_function, division
 import xml.etree.ElementTree as ET
 import maya.cmds as cmds
 import subprocess
 import os.path
 import base64
+import math
 import re
 try:
     import cPickle as pickle
@@ -71,21 +72,32 @@ def get_attribute():
                 return "{}.{}".format(obj, attr)
     return ""
 
+def get_angle(aX, aY, bX, bY):
+    """ Get angle of difference vector from (0,1) base """
+    diff = (bX-aX, bY-aY)
+    mag = math.sqrt(sum(a*a for a in diff))
+    norm = [a/mag if a else 0 for a in diff]
+    # base = (0,1)
+    # dot = sum(a*b for a, b in zip(norm, base))
+    return math.degrees(math.atan2(*norm) - math.atan2(0, 1))
+
 def set_keys(attr, keys):
     """ Set keys on attribute """
     start = keys[min(keys.keys())]
     for frame in keys:
         cmds.setKeyframe(attr, t=frame, v=keys[frame] - start)
 
-def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
+def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY):
     """ Take data. Apply it to attributes. """
-    if attrX == attrY:
+    if attrX and attrY and attrX == attrY:
         raise RuntimeError("Both attributes are the same.")
 
     attr = (attrX, attrY)
     scale = (scaleX, scaleY)
     data = ({},{})
+    angle = {}
 
+    # Calculate stability and scale
     for i in range(len(tracker)):
         for frame in tracker[i]:
             try:
@@ -93,11 +105,26 @@ def apply_data(tracker, stabalize, attrX, attrY, scaleX, scaleY):
             except (KeyError, IndexError):
                 data[i][frame] = tracker[i][frame] * scale[i]
 
+    # Calculate angle
+    for frame in tracker[0]:
+        try:
+            angle[frame] = get_angle(
+                tracker[0][frame],
+                tracker[1][frame],
+                stabalize[0][frame],
+                stabalize[1][frame])
+        except (KeyError, IndexError):
+            pass
+
+
+    print(angle)
     err = cmds.undoInfo(openChunk=True)
     try:
         for i in range(len(tracker)):
             if data[i] and attr[i]:
                 set_keys(attr[i], data[i])
+        if attrA and angle:
+            set_keys(attrA, angle)
     except Exception as err:
         raise
     finally:
