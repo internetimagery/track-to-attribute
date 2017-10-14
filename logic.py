@@ -12,7 +12,7 @@ try:
 except ImportError:
     import pickle
 
-def parse_nuke_frames(curve):
+def parse_frames(curve):
     """ Parse out keyframes from nuke curve data """
     result = {}
     frame = 0
@@ -32,16 +32,10 @@ def parse_nuke(file_):
     trackers = re.compile(r"\"((?:\\.|[^\"\\])*)\"\s+{curve\s+([-\d\.\sex]+)}\s+{curve\s+([-\d\.\sex]+)}") # :: "tracker" {curve x12 34.56 67.54-e32 43.4554}
     for node in nodes.finditer(file_):
         for tracker in trackers.finditer(node.group(0)):
-            X = parse_nuke_frames(tracker.group(2))
-            Y = parse_nuke_frames(tracker.group(3))
-            result[tracker.group(1)] = {f: (X[f], Y[f]) for f in X}
-    return result
-
-def parse_natron_frames(curve):
-    """ Pull out frame data """
-    result = {}
-    for key in curve.findall("item"):
-        result[key.find("Time").text] = float(key.find("Value").text)
+            result[tracker.group(1)] = (
+                parse_frames(tracker.group(2)),
+                parse_frames(tracker.group(3))
+                )
     return result
 
 def parse_natron(file_):
@@ -49,8 +43,13 @@ def parse_natron(file_):
     print("Reading Natron file.")
     result = {}
     for node in ET.fromstring(file_).findall("./Project/NodesCollection/item/TrackerContext/Item"):
-        X, Y = [parse_natron_frames(a) for a in node.findall("Item/[Name='centerPoint']/item/Curve/KeyFrameSet")]
-        result[node.find("Label").text] = {f: (X[f], Y[f]) for f in X}
+        curves = []
+        for curve in node.findall("Item/[Name='centerPoint']/item/Curve/KeyFrameSet"):
+            keys = {}
+            for key in curve.findall("item"):
+                keys[float(key.find("Time").text)] = float(key.find("Value").text)
+            curves.append(keys)
+        result[node.find("Label").text] = curves
     return result
 
 def get_tracks(file_path):
@@ -93,29 +92,26 @@ def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY):
 
     attr = (attrX, attrY)
     scale = (scaleX, scaleY)
-    data = {}
+    data = ({},{})
     angle = {}
 
-    # Calculate stability
-    for frame in tracker:
-        try:
-            data[frame] = [a - b for a, b in zip(tracker[frame], stabalize[frame])]
-        except KeyError:
-            data[frame] = tracker[frame]
-
-    # Scale!
-    for frame in data:
-        data[frame] = [data[a] * b for a, b in zip(data, scale)]
+    # Calculate stability and scale
+    for i in range(len(tracker)):
+        for frame in tracker[i]:
+            try:
+                data[i][frame] = (tracker[i][frame] - stabalize[i][frame]) * scale[i]
+            except (KeyError, IndexError):
+                data[i][frame] = tracker[i][frame] * scale[i]
 
     # Calculate angle
-    for frame in tracker:
+    for frame in tracker[0]:
         try:
             angle[frame] = get_angle(
-                tracker[frame][0],
-                tracker[frame][1],
-                stabalize[frame][0],
-                stabalize[frame][1])
-        except KeyError:
+                tracker[0][frame],
+                tracker[1][frame],
+                stabalize[0][frame],
+                stabalize[1][frame])
+        except (KeyError, IndexError):
             pass
 
     err = cmds.undoInfo(openChunk=True)
