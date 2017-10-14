@@ -21,9 +21,7 @@ class Window(object):
         col = cmds.columnLayout(adj=True)
         s.nuke = cmds.textFieldButtonGrp(l="Tracker File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_nuke)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
-        # cmds.menuItem(l=NONE, p=s.tracker)
         s.stabalize = cmds.optionMenuGrp(l="Stabalize / Angle:", adj=2) + "|OptionMenu"
-        # cmds.menuItem(l=NONE, p=s.stabalize)
         s.outX = cmds.textFieldButtonGrp(l="Output X:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outX))
         s.outY = cmds.textFieldButtonGrp(l="Output Y:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outY))
         s.outA = cmds.textFieldButtonGrp(l="Angle:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outA))

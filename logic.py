@@ -77,8 +77,6 @@ def get_angle(aX, aY, bX, bY):
     diff = (bX-aX, bY-aY)
     mag = math.sqrt(sum(a*a for a in diff))
     norm = [a/mag if a else 0 for a in diff]
-    # base = (0,1)
-    # dot = sum(a*b for a, b in zip(norm, base))
     return math.degrees(math.atan2(*norm) - math.atan2(0, 1))
 
 def set_keys(attr, keys):
@@ -116,8 +114,6 @@ def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY):
         except (KeyError, IndexError):
             pass
 
-
-    print(angle)
     err = cmds.undoInfo(openChunk=True)
     try:
         for i in range(len(tracker)):
