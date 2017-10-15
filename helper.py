@@ -41,18 +41,34 @@ class Keyset(object):
 class Helper(object):
     def __init__(s, data):
         """ Helper GUI to collect range information. {attr: {frame: value}} """
-        s.data = [{"attr": at, "keys": Keyset(data[at])} for at in data]
-        win = cmds.window(t="Key Match Helper")
+        s.data = {at: Keyset(data[at]) for at in data}
+        s.state = []
+        for attr in s.data:
+            s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
+            s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
+        s.state_pos = 0
+
+        win = cmds.window(t="Key Match")
         cmds.columnLayout(adj=True)
-        cmds.text(l="Please set attribute:")
+        cmds.text(l="Please position attribute:")
         s.text = cmds.text(l="ATTR")
-        s.capt = cmds.button(l="Capture Attribute")
+        s.capt = cmds.button(l="Capture Attribute", s.capture)
         cmds.showWindow()
 
-    def doit(s, attr, time, callback):
-        """ Set capture attribute at time """
+    def refresh(s):
+        """ Set gui to capture frame """
+        attr = s.state[s.state_pos]["attr"]
+        time = s.state[s.state_pos]["time"]
         cmds.text(s.text, e=True, l=attr)
-        def cb(*_):
-            callback(cmds.getattr(attr, t=time))
-        cmds.button(s.capt. e=True, c=cb)
         cmds.currentTime(time)
+
+    def capture(s, *_):
+        """ Set capture attribute at time """
+        attr = s.state[s.state_pos]["attr"]
+        time = s.state[s.state_pos]["time"]
+        s.state[s.state_pos]["val"] = cmds.getattr(attr, t=time)
+        s.state_pos += 1
+        if s.state_pos < len(s.state):
+            s.refresh()
+        else:
+            print(s.state)
