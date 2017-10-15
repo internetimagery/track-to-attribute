@@ -24,13 +24,13 @@ class Keyset(object):
     def __init__(s, keys):
         """ Accepts {frame: value} """
         s.data = keys
-        s.min, s.max = s.get_range(keys)
+        s.min, s.max = s.get_range()
 
-    def get_range(keys):
+    def get_range(s):
         """ Return min and max keyframe values """
-        min_, max_ = (0, 0)
-        for frame in keys:
-            value = keys[frame]
+        min_, max_ = (0, 0), (0, 0)
+        for frame in s.data:
+            value = s.data[frame]
             tmp_min = min(min_[1], value)
             tmp_max = max(max_[1], value)
             if value == tmp_min:
@@ -139,7 +139,12 @@ def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, s
             except (KeyError, IndexError):
                 pass
 
-    callback({
-        attrX: data[0],
-        attrY: data[1],
-        attrA: angle})
+    result = {}
+    if attrX and data[0]:
+        result[attrX] = Keyset(data[0])
+    if attrY and data[1]:
+        result[attrY] = Keyset(data[1])
+    if attrA and angle:
+        result[attrA] = Keyset(angle)
+    if result:
+        callback(result)

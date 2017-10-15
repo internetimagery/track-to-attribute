@@ -18,7 +18,7 @@ def get_attribute():
 class Helper(object):
     def __init__(s, data):
         """ Helper GUI to collect range information. {attr: {frame: value}} """
-        s.data = {at: logic.Keyset(data[at]) for at in data}
+        s.data = data
         s.state = []
         for attr in s.data:
             s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
@@ -29,7 +29,7 @@ class Helper(object):
         cmds.columnLayout(adj=True)
         cmds.text(l="Please position attribute:")
         s.text = cmds.text(l="ATTR")
-        s.capt = cmds.button(l="Capture Attribute", s.capture)
+        s.capt = cmds.button(l="Capture Attribute", c=s.capture)
         cmds.showWindow()
 
     def refresh(s):
@@ -81,7 +81,7 @@ class Window(object):
         s.outY = cmds.textFieldButtonGrp(l="Output Y:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outY))
         s.outA = cmds.textFieldButtonGrp(l="Angle:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outA))
         s.scale = cmds.intFieldGrp(l="Scale X / Y:", v1=1, v2=1, nf=2)
-        s.range = cmds.checkBoxGrp(l1="Only in timerange:", v1=True)
+        s.view = cmds.checkBoxGrp(l="Restrict to range:", v1=True)
         s.go = cmds.button(l="Keyframe!", en=False, c=s.run)
         cmds.showWindow()
 
@@ -131,7 +131,7 @@ class Window(object):
 
 
         scale = cmds.intFieldGrp(s.scale, q=True, v=True)
-        view = cmds.checkBoxGrp(s.opts, q=True, v1=True)
+        view = cmds.checkBoxGrp(s.view, q=True, v1=True)
 
         Fstart = cmds.playbackOptions(q=True, min=True) if view else -99999
         Fstop = cmds.playbackOptions(q=True, max=True) if view else 99999
