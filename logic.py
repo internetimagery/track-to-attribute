@@ -1,7 +1,6 @@
 # Make things work!
 from __future__ import print_function, division
 import xml.etree.ElementTree as ET
-import maya.cmds as cmds
 import subprocess
 import os.path
 import base64
@@ -11,6 +10,44 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+
+def real_path(path):
+    """ Get closest real path up the tree """
+    while True:
+        new_path = os.path.dirname(path)
+        if new_path == path:
+            return ""
+        elif os.path.isdir(new_path):
+            return new_path
+
+class Keyset(object):
+    def __init__(s, keys):
+        """ Accepts {frame: value} """
+        s.data = keys
+        s.min, s.max = s.get_range(keys)
+
+    def get_range(keys):
+        """ Return min and max keyframe values """
+        min_, max_ = (0, 0)
+        for frame in keys:
+            value = keys[frame]
+            tmp_min = min(min_[1], value)
+            tmp_max = max(max_[1], value)
+            if value == tmp_min:
+                min_ = (frame, value)
+            if value == tmp_max:
+                max_ = (frame, max_)
+        return min_, max_
+
+    def scale(s, min_, max_):
+        """ Scale keys to match a new min/max """
+        diff1 = s.max[1] - s.min[1]
+        diff2 = max_ - min_
+        if diff1: # Don't continue if 0... no scaling!
+            scale = (1 / diff1) * diff2
+            s.keys = {f: (s.keys[f] - s.min[1]) * scale + min_ for f in s.keys}
+            s.min, s.max = s.get_range()
+
 
 def parse_frames(curve):
     """ Parse out keyframes from nuke curve data """
@@ -64,14 +101,6 @@ def get_tracks(file_path):
         else:
             raise RuntimeError("File type not (yet) supported.")
 
-def get_attribute():
-    """ Get selected attribute from channelbox """
-    for obj in cmds.ls(sl=True) or []:
-        for attr in cmds.channelBox("mainChannelBox", sma=True, q=True) or []:
-            if cmds.attributeQuery(attr, n=obj, ex=True):
-                return "{}.{}".format(obj, attr)
-    return ""
-
 def get_angle(aX, aY, bX, bY):
     """ Get angle of difference vector from (0,1) base """
     diff = (bX-aX, bY-aY)
@@ -79,13 +108,7 @@ def get_angle(aX, aY, bX, bY):
     norm = [a/mag if a else 0 for a in diff]
     return math.degrees(math.atan2(*norm) - math.atan2(0, 1))
 
-def set_keys(attr, keys):
-    """ Set keys on attribute """
-    start = keys[min(keys.keys())]
-    for frame in keys:
-        cmds.setKeyframe(attr, t=frame, v=keys[frame] - start)
-
-def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, stop, set_keys):
+def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, stop, callback):
     """ Take data. Apply it to attributes. """
     if attrX and attrY and attrX == attrY:
         raise RuntimeError("Both attributes are the same.")
@@ -116,18 +139,7 @@ def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, s
             except (KeyError, IndexError):
                 pass
 
-    err = cmds.undoInfo(openChunk=True)
-    try:
-        for i in range(len(tracker)):
-            if data[i] and attr[i]:
-                set_keys(attr[i], data[i])
-        if attrA and angle:
-            set_keys(attrA, angle)
-    except Exception as err:
-        raise
-    finally:
-        # Do something undoable
-        cmds.select(cmds.ls(sl=True), r=True)
-        cmds.undoInfo(closeChunk=True)
-        if err:
-            cmds.undo()
+    callback({
+        attrX: data[0],
+        attrY: data[1],
+        attrA: angle})

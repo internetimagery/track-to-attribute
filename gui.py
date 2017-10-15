@@ -1,18 +1,73 @@
 # Let thee control the stuff!
+from __future__ import print_function, division
 import maya.cmds as cmds
 import logic
 import os
 
 NONE = "---"
 
-def real_path(path):
-    """ Get closest real path up the tree """
-    while True:
-        new_path = os.path.dirname(path)
-        if new_path == path:
-            return ""
-        elif os.path.isdir(new_path):
-            return new_path
+
+def get_attribute():
+    """ Get selected attribute from channelbox """
+    for obj in cmds.ls(sl=True) or []:
+        for attr in cmds.channelBox("mainChannelBox", sma=True, q=True) or []:
+            if cmds.attributeQuery(attr, n=obj, ex=True):
+                return "{}.{}".format(obj, attr)
+    return ""
+
+class Helper(object):
+    def __init__(s, data):
+        """ Helper GUI to collect range information. {attr: {frame: value}} """
+        s.data = {at: logic.Keyset(data[at]) for at in data}
+        s.state = []
+        for attr in s.data:
+            s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
+            s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
+        s.state_pos = 0
+
+        s.win = cmds.window(t="Key Match")
+        cmds.columnLayout(adj=True)
+        cmds.text(l="Please position attribute:")
+        s.text = cmds.text(l="ATTR")
+        s.capt = cmds.button(l="Capture Attribute", s.capture)
+        cmds.showWindow()
+
+    def refresh(s):
+        """ Set gui to capture frame """
+        attr = s.state[s.state_pos]["attr"]
+        time = s.state[s.state_pos]["time"]
+        cmds.text(s.text, e=True, l=attr)
+        cmds.currentTime(time)
+
+    def capture(s, *_):
+        """ Set capture attribute at time """
+        attr = s.state[s.state_pos]["attr"]
+        time = s.state[s.state_pos]["time"]
+        s.state[s.state_pos]["val"] = cmds.getattr(attr, t=time)
+        s.state_pos += 1
+        if s.state_pos < len(s.state):
+            s.refresh()
+        else:
+            # Scale keyframes!
+            for i in range(0, len(s.state), 2):
+                attr = s.state[i]["attr"]
+                min_ = s.state[i]["val"]
+                max_ = s.state[i+1]["val"]
+                s.data[attr].scale(min_, max_)
+
+            err = cmds.undoInfo(openChunk=True)
+            try:
+                for attr in s.data:
+                    for frame in s.data[attr].data:
+                        value = s.data[attr].data[frame]
+                        cmds.setKeyframe(attr, t=frame, v=value)
+            except Exception as err:
+                raise
+            finally:
+                cmds.undoInfo(closeChunk=True)
+                if err:
+                    cmds.undo()
+            cmds.deleteUI(s.win, window=True)
 
 class Window(object):
     def __init__(s):
@@ -26,7 +81,7 @@ class Window(object):
         s.outY = cmds.textFieldButtonGrp(l="Output Y:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outY))
         s.outA = cmds.textFieldButtonGrp(l="Angle:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outA))
         s.scale = cmds.intFieldGrp(l="Scale X / Y:", v1=1, v2=1, nf=2)
-        s.opts = cmds.checkBoxGrp(l1="Only Visible", l2="Wizard", v1=True, v2=True)
+        s.range = cmds.checkBoxGrp(l1="Only in timerange:", v1=True)
         s.go = cmds.button(l="Keyframe!", en=False, c=s.run)
         cmds.showWindow()
 
@@ -35,7 +90,7 @@ class Window(object):
         path = cmds.fileDialog2(
             fm=1,
             ff="Tracker file (*.nk *.ntp)",
-            dir=real_path(cmds.textFieldButtonGrp(s.nuke, q=True, tx=True)))
+            dir=logic.real_path(cmds.textFieldButtonGrp(s.nuke, q=True, tx=True)))
         if path:
             s.load_tracker(path[0])
 
@@ -62,7 +117,7 @@ class Window(object):
 
     def get_attr(s, gui):
         """ Grab attribute """
-        cmds.textFieldButtonGrp(gui, e=True, tx=logic.get_attribute())
+        cmds.textFieldButtonGrp(gui, e=True, tx=get_attribute())
 
     def run(s, *_):
         """ Run everything! """
@@ -76,7 +131,7 @@ class Window(object):
 
 
         scale = cmds.intFieldGrp(s.scale, q=True, v=True)
-        view, wizard = cmds.checkBoxGrp(s.opts, q=True, v1=True, v2=True)
+        view = cmds.checkBoxGrp(s.opts, q=True, v1=True)
 
         Fstart = cmds.playbackOptions(q=True, min=True) if view else -99999
         Fstop = cmds.playbackOptions(q=True, max=True) if view else 99999
@@ -92,4 +147,4 @@ class Window(object):
             scale[1],
             Fstart,
             Fstop,
-            logic.set_keys=)
+            Helper)
