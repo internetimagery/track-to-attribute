@@ -19,13 +19,14 @@ class Window(object):
         s.data = {}
         s.win = cmds.window("Tracker to Attribute")
         col = cmds.columnLayout(adj=True)
-        s.nuke = cmds.textFieldButtonGrp(l="Tracker File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_nuke)
+        s.nuke = cmds.textFieldButtonGrp(l="Tracker File:", bl="Browse", adj=2, bc=s.browse, cc=s.load_tracker)
         s.tracker = cmds.optionMenuGrp(l="Tracker:", adj=2) + "|OptionMenu"
         s.stabalize = cmds.optionMenuGrp(l="Stabalize / Angle:", adj=2) + "|OptionMenu"
         s.outX = cmds.textFieldButtonGrp(l="Output X:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outX))
         s.outY = cmds.textFieldButtonGrp(l="Output Y:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outY))
         s.outA = cmds.textFieldButtonGrp(l="Angle:", bl="<< CB", adj=2, bc=lambda:s.get_attr(s.outA))
         s.scale = cmds.intFieldGrp(l="Scale X / Y:", v1=1, v2=1, nf=2)
+        s.opts = cmds.checkBoxGrp(l1="Only Visible", l2="Wizard", v1=True, v2=True)
         s.go = cmds.button(l="Keyframe!", en=False, c=s.run)
         cmds.showWindow()
 
@@ -36,9 +37,9 @@ class Window(object):
             ff="Tracker file (*.nk *.ntp)",
             dir=real_path(cmds.textFieldButtonGrp(s.nuke, q=True, tx=True)))
         if path:
-            s.load_nuke(path[0])
+            s.load_tracker(path[0])
 
-    def load_nuke(s, path):
+    def load_tracker(s, path):
         """ Load nuke file """
         # Clear out any existing tracks.
         path = path.strip()
@@ -75,5 +76,20 @@ class Window(object):
 
 
         scale = cmds.intFieldGrp(s.scale, q=True, v=True)
+        view, wizard = cmds.checkBoxGrp(s.opts, q=True, v1=True, v2=True)
 
-        logic.apply_data(tracker, stabalize, outX, outY, outA, scale[0], scale[1])
+        Fstart = cmds.playbackOptions(q=True, min=True) if view else -99999
+        Fstop = cmds.playbackOptions(q=True, max=True) if view else 99999
+
+
+        logic.apply_data(
+            tracker,
+            stabalize,
+            outX,
+            outY,
+            outA,
+            scale[0],
+            scale[1],
+            Fstart,
+            Fstop,
+            logic.set_keys=)

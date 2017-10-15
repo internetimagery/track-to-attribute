@@ -85,7 +85,7 @@ def set_keys(attr, keys):
     for frame in keys:
         cmds.setKeyframe(attr, t=frame, v=keys[frame] - start)
 
-def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY):
+def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, stop, set_keys):
     """ Take data. Apply it to attributes. """
     if attrX and attrY and attrX == attrY:
         raise RuntimeError("Both attributes are the same.")
@@ -98,21 +98,23 @@ def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY):
     # Calculate stability and scale
     for i in range(len(tracker)):
         for frame in tracker[i]:
-            try:
-                data[i][frame] = (tracker[i][frame] - stabalize[i][frame]) * scale[i]
-            except (KeyError, IndexError):
-                data[i][frame] = tracker[i][frame] * scale[i]
+            if frame >= start and frame <= stop:
+                try:
+                    data[i][frame] = (tracker[i][frame] - stabalize[i][frame]) * scale[i]
+                except (KeyError, IndexError):
+                    data[i][frame] = tracker[i][frame] * scale[i]
 
     # Calculate angle
     for frame in tracker[0]:
-        try:
-            angle[frame] = get_angle(
-                tracker[0][frame],
-                tracker[1][frame],
-                stabalize[0][frame],
-                stabalize[1][frame])
-        except (KeyError, IndexError):
-            pass
+        if frame >= start and frame <= stop:
+            try:
+                angle[frame] = get_angle(
+                    tracker[0][frame],
+                    tracker[1][frame],
+                    stabalize[0][frame],
+                    stabalize[1][frame])
+            except (KeyError, IndexError):
+                pass
 
     err = cmds.undoInfo(openChunk=True)
     try:
