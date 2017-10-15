@@ -37,36 +37,22 @@ class Keyset(object):
             s.keys = {f: (s.keys[f] - s.min[1]) * scale + min_ for f in s.keys}
             s.min, s.max = s.get_range()
 
-class State(object):
-    def __init__(s, attr, keys):
-        """ Manage state collecting data for scaling """
-        s.state = 0 # 0 = min, 1 = max
-        s.attr = attr
-        s.keys = Keyset(keys)
-        s.curr_min = cmds.getattr(attr, t=s.keys.min[0])
-        s.curr_max = cmds.getattr(attr, t=s.keys.max[0])
-
 
 class Helper(object):
-    def __init__(s, attr, keys):
-        """ Helper GUI to collect range information. """
-        s.autokey = cmds.autoKeyframe(state=True, q=True)
-        cmds.autoKeyframe(state=False)
+    def __init__(s, data):
+        """ Helper GUI to collect range information. {attr: {frame: value}} """
+        s.data = [{"attr": at, "keys": Keyset(data[at])} for at in data]
         win = cmds.window(t="Key Match Helper")
         cmds.columnLayout(adj=True)
-        s.text = cmds.text(l="things")
-        s.value = cmds.intFieldGrp(l="Value:")
-        cmds.rowLayout(nc=2)
-        s.prev = cmds.button(l="Prev", en=False)
-        s.next = cmds.button(l="Next")
+        cmds.text(l="Please set attribute:")
+        s.text = cmds.text(l="ATTR")
+        s.capt = cmds.button(l="Capture Attribute")
         cmds.showWindow()
-        cmds.scriptJob(uid=(win, s.cleanup))
 
-    def cleanup(s):
-        """ Undo any changes made etc """
-        cmds.autoKeyframe(state=s.autokey)
-
-    def doit(s):
-        """ Set frame to min and max fields """
-
-        pass
+    def doit(s, attr, time, callback):
+        """ Set capture attribute at time """
+        cmds.text(s.text, e=True, l=attr)
+        def cb(*_):
+            callback(cmds.getattr(attr, t=time))
+        cmds.button(s.capt. e=True, c=cb)
+        cmds.currentTime(time)
