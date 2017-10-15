@@ -1,5 +1,6 @@
 # Help match animation. GUI!
 from __future__ import print_function, division
+import logic
 
 # goals!
 
@@ -48,7 +49,7 @@ class Helper(object):
             s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
         s.state_pos = 0
 
-        win = cmds.window(t="Key Match")
+        s.win = cmds.window(t="Key Match")
         cmds.columnLayout(adj=True)
         cmds.text(l="Please position attribute:")
         s.text = cmds.text(l="ATTR")
@@ -71,4 +72,12 @@ class Helper(object):
         if s.state_pos < len(s.state):
             s.refresh()
         else:
-            print(s.state)
+            # Scale keyframes!
+            for i in range(0, len(s.state), 2):
+                attr = s.state[i]["attr"]
+                min_ = s.state[i]["val"]
+                max_ = s.state[i+1]["val"]
+                s.data[attr].scale(min_, max_)
+            for attr in s.data:
+                logic.set_keys(attr, s.data[attr].data)
+            cmds.deleteUI(s.win, window=True)
