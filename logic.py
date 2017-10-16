@@ -24,20 +24,23 @@ class Keyset(object):
     def __init__(s, keys):
         """ Accepts {frame: value} """
         s.data = keys
-        s.min, s.max = s.get_range()
+        s.set_range()
 
-    def get_range(s):
+    def set_range(s):
         """ Return min and max keyframe values """
-        min_, max_ = (0, 0), (0, 0)
-        for frame in s.data:
+        for i, frame in enumerate(s.data):
             value = s.data[frame]
+            if not i:
+                min_ = (frame, value)
+                max_ = (frame, value)
             tmp_min = min(min_[1], value)
             tmp_max = max(max_[1], value)
             if value == tmp_min:
                 min_ = (frame, value)
             if value == tmp_max:
-                max_ = (frame, max_)
-        return min_, max_
+                max_ = (frame, value)
+        s.min = min_
+        s.max = max_
 
     def scale(s, min_, max_):
         """ Scale keys to match a new min/max """
@@ -45,8 +48,8 @@ class Keyset(object):
         diff2 = max_ - min_
         if diff1: # Don't continue if 0... no scaling!
             scale = (1 / diff1) * diff2
-            s.keys = {f: (s.keys[f] - s.min[1]) * scale + min_ for f in s.keys}
-            s.min, s.max = s.get_range()
+            s.data = {f: (s.data[f] - s.min[1]) * scale + min_ for f in s.data}
+            s.set_range()
 
 
 def parse_frames(curve):

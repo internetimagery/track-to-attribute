@@ -24,6 +24,7 @@ class Helper(object):
             s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
             s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
         s.state_pos = 0
+        print(s.state)
 
         s.win = cmds.window(t="Key Match")
         cmds.columnLayout(adj=True)
@@ -31,6 +32,7 @@ class Helper(object):
         s.text = cmds.text(l="ATTR")
         s.capt = cmds.button(l="Capture Attribute", c=s.capture)
         cmds.showWindow()
+        s.refresh()
 
     def refresh(s):
         """ Set gui to capture frame """
@@ -43,7 +45,7 @@ class Helper(object):
         """ Set capture attribute at time """
         attr = s.state[s.state_pos]["attr"]
         time = s.state[s.state_pos]["time"]
-        s.state[s.state_pos]["val"] = cmds.getattr(attr, t=time)
+        s.state[s.state_pos]["val"] = cmds.getAttr(attr, t=time)
         s.state_pos += 1
         if s.state_pos < len(s.state):
             s.refresh()
