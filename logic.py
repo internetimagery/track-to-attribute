@@ -51,7 +51,6 @@ class Keyset(object):
             s.data = {f: (s.data[f] - s.min[1]) * scale + min_ for f in s.data}
             s.set_range()
 
-
 def parse_frames(curve):
     """ Parse out keyframes from nuke curve data """
     result = {}

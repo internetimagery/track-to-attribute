@@ -29,7 +29,8 @@ class Helper(object):
         s.win = cmds.window(t="Key Match")
         cmds.columnLayout(adj=True)
         cmds.text(l="Please position attribute:")
-        s.text = cmds.text(l="ATTR")
+        s.text = cmds.text(l="ATTR", hl=True)
+        cmds.separator()
         s.capt = cmds.button(l="Capture Attribute", c=s.capture)
         cmds.showWindow()
         s.refresh()
@@ -38,7 +39,7 @@ class Helper(object):
         """ Set gui to capture frame """
         attr = s.state[s.state_pos]["attr"]
         time = s.state[s.state_pos]["time"]
-        cmds.text(s.text, e=True, l=attr)
+        cmds.text(s.text, e=True, l="<h1>{} : {}</h1>".format(attr.split(".")[0], cmds.attributeName(attr, n=True)))
         cmds.currentTime(time)
 
     def capture(s, *_):
