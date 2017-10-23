@@ -12,23 +12,24 @@ import maya.cmds as cmds
 
 class Attribute(object):
     """ Attribute gui entry """
-    def __init__(s, parent, trackers=[]):
-        s._root = cmds.rowLayout(nc=5, p=parent)
-        s._attr = cmds.textField(p=s._root)
-        s._axis = cmds.optionMenu(p=s._root)
+    def __init__(s, parent, attr="", trackers=[]):
+        s.active = True
+        s._attr = cmds.textField(w=400, tx=attr, p=parent)
+        s._axis = cmds.optionMenu(p=parent)
         for t in ["X", "Y", "Angle"]:
             cmds.menuItem(l=t, p=s._axis)
-        s._track1 = cmds.optionMenu(p=s._root)
+        s._track1 = cmds.optionMenu(p=parent)
         for t in trackers:
             cmds.menuItem(l=t, p=s._track1)
-        s._track2 = cmds.optionMenu(p=s._root)
+        s._track2 = cmds.optionMenu(p=parent)
         for t in trackers:
             cmds.menuItem(l=t, p=s._track2)
-        s._del = cmds.button(l="Remove", c=s._delete, p=s._root)
-    def _delete(s, *_):
+        s._del = cmds.button(l="Remove", c=s.delete, bgc=(0.4, 0.3, 0.3), p=parent)
+    def delete(s, *_):
         """ Remove UI element """
-        cmds.deleteUI(s._root)
-    active = property(lambda s:cmds.layout(s._root, ex=True))
+        if s.active:
+            cmds.deleteUI([s._attr, s._axis, s._track1, s._track2, s._del])
+            s.active = False
     attr = property(
         (lambda s:cmds.textField(s._attr, q=True, tx=True)),
         (lambda s, x:cmds.textField(s._attr, e=True, tx=x)))
@@ -39,22 +40,31 @@ class Attribute(object):
 class Window(object):
     def __init__(s):
         """ Apply tracker data to attributes """
-        s.trackers = ["one", "two", "three!"]
-        attriutes = []
+        s.trackers = ["--", "one", "two", "three!"]
+        s.attributes = []
         win = cmds.window(rtf=True)
         main = cmds.columnLayout(adj=True)
         cmds.button(l="Add Attribute", c=s.add_attr)
-        s.root = cmds.scrollLayout(cr=True, h=300)
-
+        cmds.scrollLayout(cr=True, h=300)
+        s.root = cmds.rowColumnLayout(nc=5)
+        cmds.text(l="Attribute")
+        cmds.text(l="Axis")
+        cmds.text(l="Tracker")
+        cmds.text(l="Stabalize / Angle")
+        cmds.button(l="Clear all", c=s.clear_all)
         for i in range(3):
-            at = (Attribute(s.root, s.trackers))
-            at.attr = "Attr! %s" % i
+            s.attributes.append(Attribute(s.root, "Attr! %s" % i, s.trackers))
         cmds.setParent(main)
         cmds.separator()
         cmds.button(l="Keyframe")
         cmds.showWindow()
 
+    def clear_all(s, *_):
+        """ Remove all attrs """
+        for at in s.attributes:
+            at.delete()
+        s.attributes = []
+
     def add_attr(s, *_):
         """ Add new attribute from channelbox """
-        at = Attribute(s.root, s.trackers)
-        at.attr = "NEW ATTR"
+        at = Attribute(s.root, "NEW ATTR", s.trackers)
