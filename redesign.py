@@ -10,6 +10,18 @@
 
 import maya.cmds as cmds
 
+NONE = "---"
+
+
+def get_attribute():
+    """ Get selected attribute from channelbox """
+    for obj in cmds.ls(sl=True) or []:
+        for attr in cmds.channelBox("mainChannelBox", sma=True, q=True) or []:
+            if cmds.attributeQuery(attr, n=obj, ex=True):
+                return "{}.{}".format(obj, attr)
+    return ""
+
+
 class Attribute(object):
     """ Attribute gui entry """
     def __init__(s, parent, attr="", trackers=[]):
@@ -40,7 +52,7 @@ class Attribute(object):
 class Window(object):
     def __init__(s):
         """ Apply tracker data to attributes """
-        s.trackers = ["--", "one", "two", "three!"]
+        s.trackers = [NONE, "one", "two", "three!"]
         s.attributes = []
         win = cmds.window(rtf=True)
         main = cmds.columnLayout(adj=True)
@@ -67,4 +79,4 @@ class Window(object):
 
     def add_attr(s, *_):
         """ Add new attribute from channelbox """
-        at = Attribute(s.root, "NEW ATTR", s.trackers)
+        s.attributes.append(Attribute(s.root, get_attribute(), s.trackers))
