@@ -206,10 +206,12 @@ class Window(object):
             Fstop = cmds.playbackOptions(q=True, max=True)
 
         # Process data
-        data = {
-            at: logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2] if t2 != NONE else [])
-            for (at, ax, t1, t2) in info if t1 != NONE and validate_attribute(at)}
+        data = {}
+        for at, ax, t1, t2 in info:
+            if t1 != NONE and validate_attribute(at):
+                dat = logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2] if t2 != NONE else [])
+                if dat:
+                    data[at] = dat
 
         # Set keyframes
-        if data:
-            Helper({k: v for k, v in data.items() if v})
+        Helper(data)
