@@ -44,24 +44,25 @@ def validate_attribute(attr):
 class Helper(object):
     def __init__(s, data):
         """ Helper GUI to collect range information. {attr: Keyset()} """
-        s.data = data
-        s.state = []
-        for attr in s.data:
-            s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
-            s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
-        s.state_pos = 0
+        if data:
+            s.data = data
+            s.state = []
+            for attr in s.data:
+                s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
+                s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
+            s.state_pos = 0
 
-        name = "KeyMatch"
-        if cmds.window(name, q=True, ex=True):
-            cmds.deleteUI(name)
-        s.win = cmds.window(t="Key Match")
-        cmds.columnLayout(adj=True)
-        cmds.text(l="Please position attribute:")
-        s.text = cmds.text(l="ATTR", hl=True)
-        cmds.separator()
-        s.capt = cmds.button(l="Capture Attribute", bgc=GREEN, h=100, c=s.capture)
-        cmds.showWindow()
-        s.refresh()
+            name = "KeyMatch"
+            if cmds.window(name, q=True, ex=True):
+                cmds.deleteUI(name)
+            s.win = cmds.window(t="Key Match")
+            cmds.columnLayout(adj=True)
+            cmds.text(l="Please position attribute:")
+            s.text = cmds.text(l="ATTR", hl=True)
+            cmds.separator()
+            s.capt = cmds.button(l="Capture Attribute", bgc=GREEN, h=100, c=s.capture)
+            cmds.showWindow()
+            s.refresh()
 
     def lock_time(s):
         """ Keep us locked in time position """
@@ -211,4 +212,4 @@ class Window(object):
 
         # Set keyframes
         if data:
-            Helper(data)
+            Helper({k: v for k, v in data.items() if v})
