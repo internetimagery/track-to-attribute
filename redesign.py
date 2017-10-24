@@ -38,7 +38,7 @@ def validate_attribute(attr):
     try:
         obj, at = attr.split(".")
         return cmds.attributeQuery(at, n=obj, k=True)
-except (ValueError, TypeError, RuntimeError):
+    except (ValueError, TypeError, RuntimeError):
         return False
 
 class Helper(object):
