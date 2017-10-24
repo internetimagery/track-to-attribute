@@ -91,7 +91,7 @@ class Attribute(object):
         s._callback = callback
         s._attr = cmds.textField(w=400, tx=attr, p=parent)
         s._axis = cmds.optionMenu(p=parent)
-        for t in ["X", "Y", "Angle"]:
+        for t in logic.AXIS:
             cmds.menuItem(l=t, p=s._axis)
         s._track1 = cmds.optionMenu(p=parent)
         for t in trackers:
@@ -104,7 +104,7 @@ class Attribute(object):
     def key(s, *_):
         """ Key attr data """
         if s._active:
-            s._callback([s.attr, s.axis, s.track1, s.track2])
+            s._callback([[s.attr, s.axis, s.track1, s.track2]])
     def delete(s, *_):
         """ Remove UI element """
         if s._active:
@@ -155,7 +155,7 @@ class Window(object):
 
     def key_all(s, *_):
         """ Key all """
-        s.set_keys((at.attr, at.axis, at.track1, at.track2)for at in s.attributes)
+        s.set_keys((at.attr, at.axis, at.track1, at.track2) for at in s.attributes)
 
     def add_attr(s, *_):
         """ Add new attribute from channelbox """
@@ -165,6 +165,10 @@ class Window(object):
 
     def set_keys(s, info):
         """ Finally start the key setting process """
+        print info
+        data = [at for (at, ax, t1, t2) in info]
+        print data
+        return
 
         # Get frame range we're working in
         slider = mel.eval("$tmp = $gPlayBackSlider")
@@ -176,8 +180,8 @@ class Window(object):
 
         # Process data
         data = {
-            at: logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2])
-            for at, ax, t1, t2 in info}
+            at: logic.process_keys(ax, Fstart, Fstop, s.data[t1] if t1 != NONE else [], s.data[t2] if t2 != NONE else [])
+            for (at, ax, t1, t2) in info}
 
         # Set keyframes
         if data:

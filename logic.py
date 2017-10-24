@@ -12,6 +12,7 @@ except ImportError:
     import pickle
 
 X, Y = 0, 1
+AXIS = ["X", "Y", "Angle"]
 
 def real_path(path):
     """ Get closest real path up the tree """
@@ -124,10 +125,10 @@ def process_keys(axis, start, end, tracker1, tracker2=[]):
                         tracker1[Y][frame],
                         tracker2[X][frame],
                         tracker2[Y][frame])
-                    except (KeyError, IndexError):
-                        pass
+                except (KeyError, IndexError):
+                    pass
     else:
-        ax = 0 if axis == "X" else 1
+        ax = 0 if axis == AXIS[0] else 1
         for frame in tracker1[ax]:
             if frame >= start and frame <= end:
                 try:
