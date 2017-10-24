@@ -22,7 +22,7 @@ D_RED = [a * 0.4 for a in RED]
 
 def get_attribute():
     """ Get selected attribute from channelbox """
-    return set("{}.{}".format(o, at) for o in cmds.ls(sl=True) for at in cmds.channelBox("mainChannelBox", sma=True, q=True) or [] if cmds.attributeQuery(at, n=o, ex=True))
+    return set("{}.{}".format(o, cmds.attributeName("{}.{}".format(o, at), l=True)) for o in cmds.ls(sl=True) for at in cmds.channelBox("mainChannelBox", sma=True, q=True) or [] if cmds.attributeQuery(at, n=o, ex=True))
 
 def browse():
     """ Open file browser """
@@ -212,6 +212,7 @@ class Window(object):
                 dat = logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2] if t2 != NONE else [])
                 if dat:
                     data[at] = dat
-
+                else:
+                    cmds.warning("({}) :: {} has no visible keys. Could be out of frame range?".format(t1, at))
         # Set keyframes
         Helper(data)

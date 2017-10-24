@@ -12,7 +12,7 @@ except ImportError:
     import pickle
 
 X, Y = 0, 1
-AXIS = ["X", "Y", "Angle"]
+AXIS = ["x", "y", "angle"]
 
 def real_path(path):
     """ Get closest real path up the tree """
@@ -116,6 +116,7 @@ def get_angle(aX, aY, bX, bY):
 def process_keys(axis, start, end, tracker1, tracker2=[]):
     """ Process keyframes. Stabalize / Angle(ify) """
     result = {}
+    axis = axis.lower()
     if axis == "angle":
         for frame in tracker1[X]:
             if frame >= start and frame <= end:
@@ -128,7 +129,7 @@ def process_keys(axis, start, end, tracker1, tracker2=[]):
                 except (KeyError, IndexError):
                     pass
     else:
-        ax = 0 if axis == AXIS[0] else 1
+        ax = AXIS.index(axis)
         for frame in tracker1[ax]:
             if frame >= start and frame <= end:
                 try:
