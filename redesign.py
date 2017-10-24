@@ -145,8 +145,6 @@ class Window(object):
             cmds.text(l="Stabalize / Angle")
             cmds.button(l="Key All")
             cmds.button(l="Clear all", c=s.clear_all)
-            for i in range(3):
-                s.attributes.append(Attribute(s.root, "Attr! %s" % i, s.trackers, s.set_keys))
             cmds.showWindow()
 
     def clear_all(s, *_):
@@ -176,9 +174,11 @@ class Window(object):
             Fstart = cmds.playbackOptions(q=True, min=True)
             Fstop = cmds.playbackOptions(q=True, max=True)
 
+        # Process data
         data = {
             at: logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2])
             for at, ax, t1, t2 in info}
 
+        # Set keyframes
         if data:
             Helper(data)
