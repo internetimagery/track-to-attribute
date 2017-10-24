@@ -16,7 +16,7 @@ NONE = "---"
 
 def get_attribute():
     """ Get selected attribute from channelbox """
-    return set(["{}.{}".format(o, at) for o in cmds.ls(sl=True) for at in cmds.channelBox("mainChannelBox", sma=True, q=True) or [] if cmds.attributeQuery(at, n=o, ex=True)])
+    return set("{}.{}".format(o, at) for o in cmds.ls(sl=True) for at in cmds.channelBox("mainChannelBox", sma=True, q=True) or [] if cmds.attributeQuery(at, n=o, ex=True))
 
 def browse():
     """ Open file browser """
@@ -29,8 +29,9 @@ def browse():
 
 class Attribute(object):
     """ Attribute gui entry """
-    def __init__(s, parent, attr, trackers):
+    def __init__(s, parent, attr, trackers, callback):
         s._active = True
+        s._callback = callback
         s._attr = cmds.textField(w=400, tx=attr, p=parent)
         s._axis = cmds.optionMenu(p=parent)
         for t in ["X", "Y", "Angle"]:
@@ -41,12 +42,12 @@ class Attribute(object):
         s._track2 = cmds.optionMenu(p=parent)
         for t in trackers:
             cmds.menuItem(l=t, p=s._track2)
-        s._key = cmds.button(l="Key", c=s.delete, bgc=(0.2, 0.5, 0.4), p=parent)
+        s._key = cmds.button(l="Key", c=s.key, bgc=(0.2, 0.5, 0.4), p=parent)
         s._del = cmds.button(l="Remove", c=s.delete, bgc=(0.4, 0.3, 0.3), p=parent)
-    def key(s, func=None):
+    def key(s, *_):
         """ Key attr data """
         if s._active:
-            return (s.attr, s.axis, s.track1, s.track2)
+            s._callback([s.attr, s.axis, s.track1, s.track2])
     def delete(s, *_):
         """ Remove UI element """
         if s._active:
@@ -88,7 +89,7 @@ class Window(object):
             cmds.button(l="Key All")
             cmds.button(l="Clear all", c=s.clear_all)
             for i in range(3):
-                s.attributes.append(Attribute(s.root, "Attr! %s" % i, s.trackers))
+                s.attributes.append(Attribute(s.root, "Attr! %s" % i, s.trackers, s.set_keys))
             cmds.showWindow()
 
     def clear_all(s, *_):
@@ -99,10 +100,15 @@ class Window(object):
 
     def key_all(s, *_):
         """ Key all """
-        result = [(at.attr, at.axis, at.track1, at.track2)for at in s.attributes]
+        s.set_keys((at.attr, at.axis, at.track1, at.track2)for at in s.attributes)
 
     def add_attr(s, *_):
         """ Add new attribute from channelbox """
         attrs = get_attribute()
         for at in attrs:
-            s.attributes.append(Attribute(s.root, at, s.trackers))
+            s.attributes.append(Attribute(s.root, at, s.trackers, s.set_keys))
+
+    def set_keys(s, info):
+        """ Finally start the key setting process """
+        for attr, axis, track1, track2 in info:
+            pass
