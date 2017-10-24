@@ -134,10 +134,7 @@ def process_keys(axis, start, end, tracker1, tracker2=[]):
                     result[frame] = tracker1[ax][frame] - tracker2[ax][frame]
                 except (KeyError, IndexError):
                     result[frame] = tracker1[ax][frame]
-    return result
-
-
-
+    return Keyset(result) if result else None
 
 def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, stop, callback):
     """ Take data. Apply it to attributes. """

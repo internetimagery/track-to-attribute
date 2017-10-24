@@ -28,6 +28,62 @@ def browse():
     if path:
         s.load_tracker(path[0])
 
+class Helper(object):
+    def __init__(s, data):
+        """ Helper GUI to collect range information. {attr: Keyset()} """
+        s.data = data
+        s.state = []
+        for attr in s.data:
+            s.state.append({ "attr": attr, "time": s.data[attr].min[0]})
+            s.state.append({ "attr": attr, "time": s.data[attr].max[0]})
+        s.state_pos = 0
+
+        s.win = cmds.window(t="Key Match")
+        cmds.columnLayout(adj=True)
+        cmds.text(l="Please position attribute:")
+        s.text = cmds.text(l="ATTR", hl=True)
+        cmds.separator()
+        s.capt = cmds.button(l="Capture Attribute", c=s.capture)
+        cmds.showWindow()
+        s.refresh()
+
+    def refresh(s):
+        """ Set gui to capture frame """
+        attr = s.state[s.state_pos]["attr"]
+        time = s.state[s.state_pos]["time"]
+        cmds.text(s.text, e=True, l="<h1>{} : {}</h1>".format(attr.split(".")[0], cmds.attributeName(attr, n=True)))
+        cmds.currentTime(time)
+
+    def capture(s, *_):
+        """ Set capture attribute at time """
+        attr = s.state[s.state_pos]["attr"]
+        time = s.state[s.state_pos]["time"]
+        s.state[s.state_pos]["val"] = cmds.getAttr(attr, t=time)
+        s.state_pos += 1
+        if s.state_pos < len(s.state):
+            s.refresh()
+        else:
+            # Scale keyframes!
+            for i in range(0, len(s.state), 2):
+                attr = s.state[i]["attr"]
+                min_ = s.state[i]["val"]
+                max_ = s.state[i+1]["val"]
+                s.data[attr].scale(min_, max_)
+
+            err = cmds.undoInfo(openChunk=True)
+            try:
+                for attr in s.data:
+                    for frame in s.data[attr].data:
+                        value = s.data[attr].data[frame]
+                        cmds.setKeyframe(attr, t=frame, v=value)
+            except Exception as err:
+                raise
+            finally:
+                cmds.undoInfo(closeChunk=True)
+                if err:
+                    cmds.undo()
+            cmds.deleteUI(s.win, window=True)
+
 class Attribute(object):
     """ Attribute gui entry """
     def __init__(s, parent, attr, trackers, callback):
@@ -124,4 +180,5 @@ class Window(object):
             at: logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2])
             for at, ax, t1, t2 in info}
 
-        print data
+        if data:
+            Helper(data)
