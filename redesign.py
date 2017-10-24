@@ -9,6 +9,7 @@
 # entry: [x/y/angle] [track] [stabalize/angle] [remove]
 
 import maya.cmds as cmds
+import maya.mel as mel
 import logic
 
 NONE = "---"
@@ -110,5 +111,17 @@ class Window(object):
 
     def set_keys(s, info):
         """ Finally start the key setting process """
-        for attr, axis, track1, track2 in info:
-            pass
+
+        # Get frame range we're working in
+        slider = mel.eval("$tmp = $gPlayBackSlider")
+        if cmds.timeControl(slider, q=True, rv=True): # Check if we have highlighted the timeline
+            Fstart, Fstop = cmds.timeControl(slider, q=True, ra=True)
+        else:
+            Fstart = cmds.playbackOptions(q=True, min=True)
+            Fstop = cmds.playbackOptions(q=True, max=True)
+
+        data = {
+            at: logic.process_keys(ax, Fstart, Fstop, s.data[t1], s.data[t2])
+            for at, ax, t1, t2 in info}
+
+        print data

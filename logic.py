@@ -11,6 +11,8 @@ try:
 except ImportError:
     import pickle
 
+X, Y = 0, 1
+
 def real_path(path):
     """ Get closest real path up the tree """
     while True:
@@ -109,6 +111,33 @@ def get_angle(aX, aY, bX, bY):
     mag = math.sqrt(sum(a*a for a in diff))
     norm = [a/mag if a else 0 for a in diff]
     return math.degrees(math.atan2(*norm) - math.atan2(0, 1))
+
+def process_keys(axis, start, end, tracker1, tracker2=[]):
+    """ Process keyframes. Stabalize / Angle(ify) """
+    result = {}
+    if axis == "angle":
+        for frame in tracker1[X]:
+            if frame >= start and frame <= end:
+                try:
+                    result[frame] = get_angle(
+                        tracker1[X][frame],
+                        tracker1[Y][frame],
+                        tracker2[X][frame],
+                        tracker2[Y][frame])
+                    except (KeyError, IndexError):
+                        pass
+    else:
+        ax = 0 if axis == "X" else 1
+        for frame in tracker1[ax]:
+            if frame >= start and frame <= end:
+                try:
+                    result[frame] = tracker1[ax][frame] - tracker2[ax][frame]
+                except (KeyError, IndexError):
+                    result[frame] = tracker1[ax][frame]
+    return result
+
+
+
 
 def apply_data(tracker, stabalize, attrX, attrY, attrA, scaleX, scaleY, start, stop, callback):
     """ Take data. Apply it to attributes. """
