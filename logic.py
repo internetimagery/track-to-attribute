@@ -1,15 +1,9 @@
 # Make things work!
 from __future__ import print_function, division
 import xml.etree.ElementTree as ET
-import subprocess
 import os.path
-import base64
 import math
 import re
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 X, Y = 0, 1
 AXIS = ["x", "y", "angle"]
